@@ -81,6 +81,7 @@ C>* 192.168.11.0/24 is directly connected, eth3
 ```
 
 Ставлю интерфейсы на __r1__ на прослушивание
+
 ![01_r1-tcpdump-symmetric.png](./01_r1-tcpdump-symmetric.png)
 
 
@@ -98,7 +99,9 @@ rtt min/avg/max/mdev = 0.534/0.582/0.651/0.057 ms
 ```
 
 Смотрю результаты tcpdump на __r1__
+
 ![02_r1-tcpdump-symmetric.png](./02_r1-tcpdump-symmetric.png)
+
 
 В обоих направлениях пакеты идут по одному и тому же маршруту - кратчайшему.
 
@@ -155,6 +158,7 @@ r2(config-if)# ip os co 1000
 
 ![04_r1-tcpdump-asymmetric_total.png](./04_r1-tcpdump-asymmetric_total.png)
 
+
 Здесь видно, что в разном направлении пакеты ходят разными маршрутами.
 
 Возвращаю изначальные настройки на __r2__
@@ -174,9 +178,13 @@ r2(config-if)# no ip os co 1000
 ```
 
 Проверяю
+
 ![05_r1-tcpdump-symmetric-recovery-1.png](./05_r1-tcpdump-symmetric-recovery-1.png)
 
+
 Результат очевиден.
+
+
 Восстанавливаю eth2 на __r3__
 ```
 [root@r3 ~]# ip link set eth2 up
@@ -211,7 +219,9 @@ C>* 192.168.11.0/24 is directly connected, eth3
 [root@r3 ~]# ip route add 10.0.0.1/32 via 172.16.2.1 dev eth1
 ```
 Проверяю
+
 ![05_r1-tcpdump-symmetric-recovery-2.png](./05_r1-tcpdump-symmetric-recovery-2.png)
+
 
 Смотрю маршруты
 ```
