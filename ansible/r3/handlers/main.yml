@@ -1,0 +1,27 @@
+---
+# handlers file for r1
+- name: restart network
+  systemd:
+    name: network
+    state: restarted
+
+- name: start zebra
+  systemd:
+    name: zebra
+    state: started
+    enabled: yes
+
+- name: start ospfd
+  systemd:
+    name: ospfd
+    state: started
+    enabled: yes
+
+- name: start firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: sysctl read values
+  command: sysctl -p /etc/sysctl.d/router.conf

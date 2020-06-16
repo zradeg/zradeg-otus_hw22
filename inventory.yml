@@ -1,0 +1,6 @@
+[r1]
+r1 ansible_host=192.168.11.101 ansible_port=22 ansible_private_key_file=.vagrant/machines/logger/virtualbox/private_key
+[r2]
+r2 ansible_host=192.168.11.102 ansible_port=22 ansible_private_key_file=.vagrant/machines/web/virtualbox/private_key
+[r3]
+r3 ansible_host=192.168.11.103 ansible_port=22 ansible_private_key_file=.vagrant/machines/web/virtualbox/private_key

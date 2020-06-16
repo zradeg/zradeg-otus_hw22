@@ -1,0 +1,21 @@
+---
+- name: r1
+  hosts: r1
+  gather_facts: false
+  roles:
+    - r1
+  become: true
+
+- name: r2
+  hosts: r2
+  gather_facts: false
+  roles:
+    - r2
+  become: true
+
+- name: r3
+  hosts: r3
+  gather_facts: false
+  roles:
+    - r3
+  become: true

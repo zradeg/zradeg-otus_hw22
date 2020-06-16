@@ -1,0 +1,76 @@
+---
+# tasks file for r2
+- name: TZ | Setting TimeZone
+  command: ln -sf /usr/share/zoneinfo/Europe/Moscow /etc/localtime
+  tags:
+    - timezone
+
+- name: LOOPBACK | Configure loopback
+  template:
+    src: ../templates/ifcfg-lo.2.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-lo.2
+  tags:
+    - loopback
+  notify:
+    - restart network
+
+- name: ROUTER_CONFIG | Configure kernel parameters for routing
+  template:
+    src: ../templates/router.conf.j2
+    dest: /etc/sysctl.d/router.conf
+  tags:
+    - router
+  notify:
+    - sysctl read values
+
+- name: PACKAGES | Install packages
+  yum:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+      - vim
+      - mc
+      - traceroute
+      - tcpdump
+      - quagga
+      - tmux
+  tags:
+    - packages
+
+- name: QUAGGA | Set selinux ability for zebra writing configs
+  command: setsebool -P zebra_write_config 1
+  tags:
+    - selinux
+
+- name: OSPFD | Configure ospfd.conf
+  template:
+    src: ../templates/ospfd.conf.j2
+    dest: /etc/quagga/ospfd.conf
+    owner: quagga
+    group: quaggavt
+  tags:
+    - ospfd
+  notify:
+    - start ospfd
+    - start zebra
+    - start firewalld
+
+- name: FIREWALLD | Allow 89 protocol
+  command: "{{ item }}"
+  with_items:
+    - systemctl start firewalld
+    - firewall-cmd --add-protocol=ospf --permanent
+    - firewall-cmd --reload
+
+- name: DEFROUTE_OFF | Disable default route
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-eth0
+    line: 'DEFROUTE=no'
+  tags:
+    - default_route
+  notify:
+    - restart network
+
+- name: Reboot r2
+  reboot:
