@@ -251,6 +251,7 @@ r3(config-if)# ip os co 1000
 ```
 
 Проверяю
+
 ![05_r1-tcpdump-symmetric-recovery-3.png](./05_r1-tcpdump-symmetric-recovery-3.png)
 
 Видно, что симметричность восстановилась.
