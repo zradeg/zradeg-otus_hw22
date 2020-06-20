@@ -51,7 +51,7 @@
 
 ### Проверка симметричности маршрутизации
 
-До проведения изменений посмотрю состояние маршрутов на __r3__
+До проведения изменений посмотрю состоние маршрутов на __r3
 ```
 [root@r3 ~]# vtysh
 
@@ -81,7 +81,6 @@ C>* 192.168.11.0/24 is directly connected, eth3
 ```
 
 Ставлю интерфейсы на __r1__ на прослушивание
-
 ![01_r1-tcpdump-symmetric.png](./01_r1-tcpdump-symmetric.png)
 
 
@@ -99,9 +98,7 @@ rtt min/avg/max/mdev = 0.534/0.582/0.651/0.057 ms
 ```
 
 Смотрю результаты tcpdump на __r1__
-
 ![02_r1-tcpdump-symmetric.png](./02_r1-tcpdump-symmetric.png)
-
 
 В обоих направлениях пакеты идут по одному и тому же маршруту - кратчайшему.
 
@@ -158,7 +155,6 @@ r2(config-if)# ip os co 1000
 
 ![04_r1-tcpdump-asymmetric_total.png](./04_r1-tcpdump-asymmetric_total.png)
 
-
 Здесь видно, что в разном направлении пакеты ходят разными маршрутами.
 
 Возвращаю изначальные настройки на __r2__
@@ -178,13 +174,9 @@ r2(config-if)# no ip os co 1000
 ```
 
 Проверяю
-
 ![05_r1-tcpdump-symmetric-recovery-1.png](./05_r1-tcpdump-symmetric-recovery-1.png)
 
-
 Результат очевиден.
-
-
 Восстанавливаю eth2 на __r3__
 ```
 [root@r3 ~]# ip link set eth2 up
@@ -219,9 +211,7 @@ C>* 192.168.11.0/24 is directly connected, eth3
 [root@r3 ~]# ip route add 10.0.0.1/32 via 172.16.2.1 dev eth1
 ```
 Проверяю
-
 ![05_r1-tcpdump-symmetric-recovery-2.png](./05_r1-tcpdump-symmetric-recovery-2.png)
-
 
 Смотрю маршруты
 ```
@@ -248,12 +238,50 @@ C>* 192.168.11.0/24 is directly connected, eth3
 ```
 
 Итого, оба варианта работают. Но оба варианта сводят на нет плюсы динамической маршрутизации, т.к. при любых нарушениях доступности на оставшемся маршруте, будет полностью потеряна связность.
+Поэтому пробую третий вариант, который сохраняет гибкость динамической маршрутизации:
+
+* Вариант третий
+
+Увеличиваю стоимость eth2 на __r3__
+```
+[root@r3 ~]# vtysh
+r3# conf t
+r3(config)# int eth2
+r3(config-if)# ip os co 1000
+```
+
+Проверяю
+![05_r1-tcpdump-symmetric-recovery-3.png](./05_r1-tcpdump-symmetric-recovery-3.png)
+
+Видно, что симметричность восстановилась.
+
+Смотрю маршруты
+```
+r3# sh ip ro
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, A - Babel,
+       > - selected route, * - FIB route
+
+O>* 0.0.0.0/0 [110/10] via 172.16.2.1, eth1, 00:04:42
+O>* 10.0.0.1/32 [110/1010] via 172.16.2.1, eth1, 00:04:43
+O>* 10.0.0.2/32 [110/1010] via 172.16.3.2, eth2, 00:04:43
+O   10.0.0.3/32 [110/10] is directly connected, lo, 01:14:13
+C>* 10.0.0.3/32 is directly connected, lo
+C>* 10.0.2.0/24 is directly connected, eth0
+C>* 127.0.0.0/8 is directly connected, lo
+O>* 172.16.1.0/24 [110/1010] via 172.16.2.1, eth1, 00:04:43
+  *                          via 172.16.3.2, eth2, 00:04:43
+O   172.16.2.0/24 [110/1000] is directly connected, eth1, 00:04:43
+C>* 172.16.2.0/24 is directly connected, eth1
+O   172.16.3.0/24 [110/1000] is directly connected, eth2, 00:04:43
+C>* 172.16.3.0/24 is directly connected, eth2
+C>* 192.168.11.0/24 is directly connected, eth3
+```
+
+Здесь также видно, что в сторону сети 172.16.1.0/24 появилось снова два маршрута с сопоставимой стоимостью.
 
 
 ## Примечание
 - Почему-то не отрабатывал handler рестарта сети в таске удаления дефолтного маршрута с eth0, пришлось прибегнуть к перезагрузке хостов.
 - Не получилось использовать модуль seboolean, не нашлись необходимые пакеты libselinux-python и  libsemanage-python - по всей видимости из-за того, что хостовая система debian-based.
 - В перспективе необходимо будет переписать ansible-конфигурацию на playbook вместо ролей, т.к. в ролях получается слишком много повторяющегося кода.
-
-
-
